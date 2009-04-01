@@ -17,9 +17,11 @@
 package org.hence22.hazelcast.actor.api;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
- * A simple serializable class containing the input message for the {@link Actor}.
+ * A simple serializable class containing the input message for the
+ * {@link Actor}.
  * 
  * @author truemped@googlemail.com
  */
@@ -50,9 +52,15 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	}
 
 	/**
+	 * Currently the ID of the call is composed of the parameter's hash code
+	 * added by the current unix time. The value of the ID is the result's hash
+	 * code.
+	 * 
 	 * @return The id of this message.
 	 */
 	public int getMessageId() {
-		return this.msg.hashCode();
+		Integer id = this.msg.hashCode();
+		id += new Date().getTime();
+		return id.hashCode();
 	}
 }
