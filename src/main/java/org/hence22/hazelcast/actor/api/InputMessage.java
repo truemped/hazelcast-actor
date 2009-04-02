@@ -38,10 +38,19 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	private X msg;
 
 	/**
+	 * This message's ID.
+	 */
+	private int msgId;
+	
+	/**
 	 * @param msg
 	 */
 	public InputMessage(X msg) {
 		this.msg = msg;
+		
+		Integer id = this.msg.hashCode();
+		id += new Date().getTime();
+		this.msgId = id.hashCode();
 	}
 
 	/**
@@ -59,8 +68,6 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	 * @return The id of this message.
 	 */
 	public int getMessageId() {
-		Integer id = this.msg.hashCode();
-		id += new Date().getTime();
-		return id.hashCode();
+		return this.msgId;
 	}
 }
