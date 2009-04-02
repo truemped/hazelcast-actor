@@ -49,7 +49,7 @@ public class InputMessage<X extends Serializable> implements Serializable {
 		this.msg = msg;
 		
 		Integer id = this.msg.hashCode();
-		id += new Date().getTime();
+		id += new Long(new Date().getTime()).intValue();
 		this.msgId = id.hashCode();
 	}
 
