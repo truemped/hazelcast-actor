@@ -18,6 +18,8 @@ package org.hence22.hazelcast.actor.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -39,7 +41,7 @@ public class AbstractActorTest {
 		 * Constructor for the echo actor.
 		 */
 		public EchoActor() {
-			super(new DefaultNamingStrategy(), EchoActor.class);
+			super(new DefaultNamingStrategy(), EchoActor.class, true);
 		}
 
 		/*
@@ -69,5 +71,37 @@ public class AbstractActorTest {
 
 		Future<String> future = echoProxy.call("Test");
 		assertEquals("Test", future.get());
+	}
+
+	/**
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	@Test
+	public void testBulkLoadingOfTasks() throws InterruptedException, ExecutionException {
+
+		new EchoActor();
+
+		ActorProxy<String, String> echoProxy = new ActorProxy<String, String>(
+				new DefaultNamingStrategy(), EchoActor.class);
+
+		List<Future<String>> futures;
+		List<String> strings = new ArrayList<String>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 7328631044879958719L;
+
+			{
+				this.add("Test1");
+				this.add("Test2");
+			}
+		};
+		
+		futures = echoProxy.call(strings);
+		
+		assertEquals("Test1", futures.get(0).get());
+		assertEquals("Test2", futures.get(1).get());
+
 	}
 }
