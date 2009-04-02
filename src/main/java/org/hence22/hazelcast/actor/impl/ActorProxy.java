@@ -17,6 +17,8 @@
 package org.hence22.hazelcast.actor.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -101,6 +103,21 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 				this.canceledCalls);
 	}
 
+	/**
+	 * Submit a list of input messages to the actor.
+	 * 
+	 * @param inputs
+	 *            The list of input messages.
+	 * @return The list of futures.
+	 */
+	public List<Future<Y>> call(List<X> inputs) {
+		List<Future<Y>> futures = new ArrayList<Future<Y>>();
+		for (X input : inputs) {
+			futures.add(this.call(input));
+		}
+		return futures;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -122,7 +139,7 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	/**
 	 * The {@link Future} representing a call to an {@link Actor}.
 	 * 
-	 * @author daniel
+	 * @author truemped@googlemail.com
 	 * @param <Y>
 	 */
 	public final class ActorFuture implements Future<Y> {
