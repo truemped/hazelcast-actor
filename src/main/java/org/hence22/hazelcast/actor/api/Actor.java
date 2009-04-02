@@ -23,7 +23,7 @@ import java.io.Serializable;
  * 
  * @author truemped@googlemail.com
  */
-public interface Actor<X extends Serializable, Y extends Serializable> extends Runnable {
+public interface Actor<X extends Serializable, Y extends Serializable> {
 
 	/**
 	 * The <it>business logic</it> associated with the actor.
@@ -33,8 +33,4 @@ public interface Actor<X extends Serializable, Y extends Serializable> extends R
 	 */
 	Y call(X input);
 
-	/**
-	 * Shutdown this actor.
-	 */
-	void shutdown();
 }

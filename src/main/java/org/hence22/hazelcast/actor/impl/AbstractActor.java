@@ -24,6 +24,7 @@ import org.hence22.hazelcast.actor.api.Actor;
 import org.hence22.hazelcast.actor.api.InputMessage;
 import org.hence22.hazelcast.actor.api.OutputMessage;
 import org.hence22.hazelcast.actor.api.QueueNamingStrategy;
+import org.hence22.hazelcast.actor.api.Stoppable;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.ITopic;
@@ -46,7 +47,12 @@ import com.hazelcast.core.ITopic;
  * @author truemped@googlemail.com
  */
 public abstract class AbstractActor<X extends Serializable, Y extends Serializable>
-		implements Actor<X, Y> {
+		implements Actor<X, Y>, Runnable, Stoppable {
+
+	/**
+	 * The name of the actor's input queue.
+	 */
+	private String inputQueueName;
 
 	/**
 	 * This actor's input queue.
@@ -59,19 +65,18 @@ public abstract class AbstractActor<X extends Serializable, Y extends Serializab
 	private ITopic<OutputMessage<Y>> outputTopic;
 
 	/**
-	 * The implementation has to set this field so that the {@link #strategy} is
-	 * correct.
-	 */
-	protected Class<?> myClass;
-
-	/**
 	 * If true we should shutdown this actor.
 	 */
 	private volatile boolean shutdownRequested = false;
 
 	/**
+	 * The thread count of threads running this actor.
+	 */
+	private volatile int threadCount = 0;
+
+	/**
 	 * Constructor setting the names of the queue/topic via a
-	 * {@link QueueNamingStrategy}.
+	 * {@link QueueNamingStrategy} and automatically starting a thread.
 	 * 
 	 * @param strategy
 	 *            The {@link QueueNamingStrategy} to use with this actor.
@@ -84,10 +89,25 @@ public abstract class AbstractActor<X extends Serializable, Y extends Serializab
 	}
 
 	/**
-	 * Constructor setting the names of the queue/topic directly from strings.
+	 * Constructor setting the names of the queue/topic via a
+	 * {@link QueueNamingStrategy} and automatically starting a thread.
 	 * 
-	 * After the {@link #inputQueue} and the {@link #outputTopic} have been
-	 * initialized a {@link Thread} for this actor is started.
+	 * @param strategy
+	 *            The {@link QueueNamingStrategy} to use with this actor.
+	 * @param clazz
+	 *            The class of the actor.
+	 * @param startThread
+	 *            if <b>true</b> start a thread
+	 */
+	protected AbstractActor(QueueNamingStrategy strategy, Class<?> clazz,
+			boolean startThread) {
+		this(strategy.getInputQueueNameForActor(clazz), strategy
+				.getOutputTopicNameForActor(clazz), startThread);
+	}
+
+	/**
+	 * Constructor setting the names of the queue/topic directly from strings
+	 * and automatically starting a thread.
 	 * 
 	 * @param inputQueueName
 	 *            The name of this actor's input queue.
@@ -95,11 +115,41 @@ public abstract class AbstractActor<X extends Serializable, Y extends Serializab
 	 *            The name of this actor's output topic.
 	 */
 	protected AbstractActor(String inputQueueName, String outputTopicName) {
+		this(inputQueueName, outputTopicName, true);
+	}
+
+	/**
+	 * Constructor setting the names of the queue/topic from strings.
+	 * 
+	 * After the {@link #inputQueue} and the {@link #outputTopic} have been
+	 * initialized a {@link Thread} for this actor is started if startThread is
+	 * <b>true</b>.
+	 * 
+	 * @param inputQueueName
+	 *            The name of this actor's input queue.
+	 * @param outputTopicName
+	 *            The name of this actor's output topic.
+	 * @param startThread
+	 *            if <b>true</b> start a thread
+	 */
+	protected AbstractActor(String inputQueueName, String outputTopicName,
+			boolean startThread) {
+		this.inputQueueName = inputQueueName;
 		this.inputQueue = Hazelcast.getQueue(inputQueueName);
 		this.outputTopic = Hazelcast.getTopic(outputTopicName);
 
+		if (startThread) {
+			this.start();
+		}
+	}
+
+	/**
+	 * Start the actor in a separate thread.
+	 */
+	public final void start() {
 		Thread t = new Thread(this);
-		t.setName("hz-actor: " + inputQueueName);
+		t.setName("hz-actor [" + Integer.toString(this.threadCount++) + "]: "
+				+ this.inputQueueName);
 		t.start();
 	}
 
@@ -116,9 +166,8 @@ public abstract class AbstractActor<X extends Serializable, Y extends Serializab
 						TimeUnit.MILLISECONDS);
 				if (input != null) {
 					Y output = this.call(input.getMsg());
-					OutputMessage<Y> result = new OutputMessage<Y>(input
-							.getMessageId(), output);
-					this.outputTopic.publish(result);
+					this.outputTopic.publish(new OutputMessage<Y>(input
+							.getMessageId(), output));
 				}
 			} catch (InterruptedException e) {
 				// ups. We should probably stop now!
@@ -128,10 +177,8 @@ public abstract class AbstractActor<X extends Serializable, Y extends Serializab
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hence22.hazelcast.actor.api.Actor#shutdown()
+	/* (non-Javadoc)
+	 * @see org.hence22.hazelcast.actor.api.Stoppable#shutdown()
 	 */
 	@Override
 	public void shutdown() {
