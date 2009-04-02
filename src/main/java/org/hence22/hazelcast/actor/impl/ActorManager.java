@@ -137,8 +137,7 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 		Thread me = Thread.currentThread();
 		me.setName("hz-actor: " + this.getClass().getName());
 
-		PublishingScheduler scheduler = new PublishingScheduler(
-				this.newOutputMessages, this.outputTopic);
+		PublishingScheduler scheduler = new PublishingScheduler();
 		new Thread(scheduler).start();
 
 		while (!this.shutdownRequested) {
@@ -149,7 +148,8 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 					InputMessage<X> input = this.inputQueue.poll(100L,
 							TimeUnit.MILLISECONDS);
 					if (input != null) {
-						AbstractActorWorker<X, Y> worker = this.actorFactory.newInstance();
+						AbstractActorWorker<X, Y> worker = this.actorFactory
+								.newInstance();
 						worker.setInput(input.getMsg());
 						// add the worker to the pool and to the
 						// newOutputMessages
@@ -238,29 +238,9 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	private class PublishingScheduler implements Runnable, Stoppable {
 
 		/**
-		 * The queue for new futures.
-		 */
-		private BlockingQueue<MessageToBePublished> queue;
-
-		/**
-		 * The topic to publish the messages.
-		 */
-		private ITopic<OutputMessage<Y>> topic;
-
-		/**
 		 * Indicate a shutdown request.
 		 */
 		private volatile boolean shutdownRequested = false;
-
-		/**
-		 * @param queue
-		 * @param topic
-		 */
-		public PublishingScheduler(BlockingQueue<MessageToBePublished> queue,
-				ITopic<OutputMessage<Y>> topic) {
-			this.queue = queue;
-			this.topic = topic;
-		}
 
 		/*
 		 * (non-Javadoc)
@@ -271,12 +251,12 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 		public void run() {
 			while (!this.shutdownRequested) {
 				try {
-					MessageToBePublished m = this.queue.poll(100L,
-							TimeUnit.MILLISECONDS);
+					MessageToBePublished m = ActorManager.this.newOutputMessages
+							.poll(100L, TimeUnit.MILLISECONDS);
 					if (m != null) {
 						OutputMessage<Y> outMsg = new OutputMessage<Y>(m
 								.getMsgId(), m.getFuture().get());
-						this.topic.publish(outMsg);
+						ActorManager.this.outputTopic.publish(outMsg);
 					}
 				} catch (InterruptedException e) {
 					// ups. we should probably stop here.
