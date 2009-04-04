@@ -18,7 +18,12 @@ package org.hence22.hazelcast.actor.api;
 
 import java.io.Serializable;
 
+import org.hence22.hazelcast.actor.impl.AbstractActorWorker;
+
+import com.hazelcast.core.ITopic;
+
 /**
+ * A factory for {@link AbstractActorWorker}s.
  * 
  * @author truemped@googlemail.com
  */
@@ -34,8 +39,12 @@ public interface ActorWorkerFactory<X extends Serializable, Y extends Serializab
 	Class<? extends AbstractActorWorker<X, Y>> getClazz();
 
 	/**
+	 * The factory method for a new {@link Actor}.
+	 * 
+	 * @param input The input message for the new actor.
+	 * @param topic The Hazelcast output topic for publishing the results.
 	 * @return A new instance of the actor worker.
 	 */
-	AbstractActorWorker<X, Y> newInstance();
+	AbstractActorWorker<X, Y> newInstance(InputMessage<X> input, ITopic<OutputMessage<Y>> topic);
 	
 }

@@ -18,14 +18,10 @@ package org.hence22.hazelcast.actor.impl;
 
 import java.io.Serializable;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.hence22.hazelcast.actor.api.AbstractActorWorker;
 import org.hence22.hazelcast.actor.api.ActorWorkerFactory;
 import org.hence22.hazelcast.actor.api.InputMessage;
 import org.hence22.hazelcast.actor.api.OutputMessage;
@@ -36,6 +32,18 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.ITopic;
 
 /**
+ * A manager for running actors in a thread pool.
+ * 
+ * Usage:
+ * <code>
+ * ActorManager&lt;String, String&gt; myActorManager = new ActorManager<String,
+ *     String>(new DefaultNamingStrategy(), new MyActorFactory());
+ * 
+ * Thread manager = new Thread(echoManager);
+ * 
+ * manager.start();
+ * </code>
+ * 
  * @author truemped@googlemail.com
  */
 public class ActorManager<X extends Serializable, Y extends Serializable>
@@ -72,11 +80,6 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	private volatile boolean shutdownRequested = false;
 
 	/**
-	 * A blocking queue of outgoing messages.
-	 */
-	private BlockingQueue<MessageToBePublished> newOutputMessages = new LinkedBlockingQueue<MessageToBePublished>();
-
-	/**
 	 * Constructor setting the Hazelcast names and creating a
 	 * {@link ThreadPoolExecutor} with maxNumberOfActorThreads.
 	 * 
@@ -93,9 +96,12 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	}
 
 	/**
-	 * Constructor setting the Hazelcast names and creating a
+	 * Constructor setting the Hazelcast names and creating a caching
 	 * {@link ThreadPoolExecutor} where the maximum capacity of worker threads
-	 * equals the number of processors.
+	 * equals the maximum integer number.
+	 * 
+	 * This will allow recursive calls to actors since there may be
+	 * <b>Integer.MAX_VALUE</b> number of threads.
 	 * 
 	 * @param strategy
 	 * @param clazz
@@ -104,7 +110,7 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 			final ActorWorkerFactory<X, Y> factory) {
 		this(strategy.getInputQueueNameForActor(factory.getClazz()), strategy
 				.getOutputTopicNameForActor(factory.getClazz()), factory,
-				Runtime.getRuntime().availableProcessors());
+				Integer.MAX_VALUE);
 	}
 
 	/**
@@ -135,10 +141,7 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	public void run() {
 
 		Thread me = Thread.currentThread();
-		me.setName("hz-actor: " + this.getClass().getName());
-
-		PublishingScheduler scheduler = new PublishingScheduler();
-		new Thread(scheduler).start();
+		me.setName("hz-actor-manager: " + this.getClass().getName());
 
 		while (!this.shutdownRequested) {
 			// check if the threadpool can handle another thread
@@ -149,13 +152,9 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 							TimeUnit.MILLISECONDS);
 					if (input != null) {
 						AbstractActorWorker<X, Y> worker = this.actorFactory
-								.newInstance();
-						worker.setInput(input.getMsg());
-						// add the worker to the pool and to the
-						// newOutputMessages
-						this.newOutputMessages.put(new MessageToBePublished(
-								input.getMessageId(), this.actorExecutor
-										.submit(worker)));
+								.newInstance(input, this.outputTopic);
+						// add the worker to the pool
+						this.actorExecutor.submit(worker);
 					}
 				} catch (InterruptedException e) {
 					// ups. we should probably stop here.
@@ -165,121 +164,11 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 			}
 		}
 
-		scheduler.shutdown();
-
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hence22.hazelcast.actor.api.Stoppable#shutdown()
-	 */
 	@Override
 	public void shutdown() {
 		this.shutdownRequested = true;
 	}
 
-	/**
-	 * A simple container for messages that have to be delivered as soon as a
-	 * worker thread finished.
-	 * 
-	 * @author truemped@googlemail.com
-	 */
-	private class MessageToBePublished {
-
-		/**
-		 * The msg id.
-		 */
-		private int msgId;
-
-		/**
-		 * The {@link Future} representing a call.
-		 */
-		private Future<Y> val;
-
-		/**
-		 * Constructor setting the fields.
-		 * 
-		 * @param msgId
-		 *            The message id.
-		 * @param val
-		 *            The {@link Future} representing a call.
-		 */
-		public MessageToBePublished(int msgId, Future<Y> val) {
-			this.msgId = msgId;
-			this.val = val;
-		}
-
-		/**
-		 * @return The message without the value.
-		 */
-		public int getMsgId() {
-			return this.msgId;
-		}
-
-		/**
-		 * @return The future representing this call.
-		 */
-		public Future<Y> getFuture() {
-			return this.val;
-		}
-	}
-
-	/**
-	 * The thread sending the messages back to the caller.
-	 * 
-	 * This scheduler implicity assumes linear time in all workers, i.e. the
-	 * messages are published in the same order as they have been received.
-	 * 
-	 * TODO remove linear time constraint
-	 * 
-	 * @author truemped@googlemail.com
-	 */
-	private class PublishingScheduler implements Runnable, Stoppable {
-
-		/**
-		 * Indicate a shutdown request.
-		 */
-		private volatile boolean shutdownRequested = false;
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.lang.Runnable#run()
-		 */
-		@Override
-		public void run() {
-			while (!this.shutdownRequested) {
-				try {
-					MessageToBePublished m = ActorManager.this.newOutputMessages
-							.poll(100L, TimeUnit.MILLISECONDS);
-					if (m != null) {
-						OutputMessage<Y> outMsg = new OutputMessage<Y>(m
-								.getMsgId(), m.getFuture().get());
-						ActorManager.this.outputTopic.publish(outMsg);
-					}
-				} catch (InterruptedException e) {
-					// ups. we should probably stop here.
-					e.printStackTrace();
-					this.shutdownRequested = true;
-				} catch (ExecutionException e) {
-					// ups. we should probably stop here.
-					e.printStackTrace();
-					this.shutdownRequested = true;
-				}
-			}
-			ActorManager.this.shutdown();
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.hence22.hazelcast.actor.api.Stoppable#shutdown()
-		 */
-		@Override
-		public void shutdown() {
-			this.shutdownRequested = true;
-		}
-
-	}
 }

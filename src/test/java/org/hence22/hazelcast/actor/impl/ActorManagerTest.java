@@ -23,9 +23,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.hence22.hazelcast.actor.api.AbstractActorWorker;
 import org.hence22.hazelcast.actor.api.ActorWorkerFactory;
+import org.hence22.hazelcast.actor.api.InputMessage;
+import org.hence22.hazelcast.actor.api.OutputMessage;
 import org.junit.Test;
+
+import com.hazelcast.core.ITopic;
 
 /**
  * @author truemped@googlemail.com
@@ -39,6 +42,15 @@ public class ActorManagerTest {
 	 * @author truemped@googlemail.com
 	 */
 	private class EchoActor extends AbstractActorWorker<String, String> {
+
+		/**
+		 * @param inputMsg
+		 * @param topic
+		 */
+		protected EchoActor(InputMessage<String> inputMsg,
+				ITopic<OutputMessage<String>> topic) {
+			super(inputMsg, topic);
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -71,8 +83,9 @@ public class ActorManagerTest {
 		}
 
 		@Override
-		public AbstractActorWorker<String, String> newInstance() {
-			return new EchoActor();
+		public AbstractActorWorker<String, String> newInstance(
+				InputMessage<String> input, ITopic<OutputMessage<String>> topic) {
+			return new EchoActor(input, topic);
 		}
 
 	}
@@ -124,9 +137,9 @@ public class ActorManagerTest {
 				this.add("Test4");
 			}
 		};
-		
+
 		futures = echoProxy.call(strings);
-		
+
 		assertEquals("Test1", futures.get(0).get());
 		assertEquals("Test2", futures.get(1).get());
 		assertEquals("Test3", futures.get(2).get());
