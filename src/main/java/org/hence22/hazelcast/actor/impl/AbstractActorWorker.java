@@ -14,11 +14,16 @@
  * limitations under the License.
  *
  */
-package org.hence22.hazelcast.actor.api;
+package org.hence22.hazelcast.actor.impl;
 
 import java.io.Serializable;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
+
+import org.hence22.hazelcast.actor.api.Actor;
+import org.hence22.hazelcast.actor.api.InputMessage;
+import org.hence22.hazelcast.actor.api.OutputMessage;
+
+import com.hazelcast.core.ITopic;
 
 /**
  * An abstract class for actors living in a {@link ThreadPoolExecutor}.
@@ -28,18 +33,28 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author truemped@googlemail.com
  */
 public abstract class AbstractActorWorker<X extends Serializable, Y extends Serializable>
-		implements Actor<X, Y>, Callable<Y> {
+		implements Actor<X, Y>, Runnable {
 
 	/**
-	 * The input of this actor's run.
+	 * The input message for this actor instance.
 	 */
-	private X input;
+	private InputMessage<X> inputMsg;
 
 	/**
-	 * @param input
+	 * The Hazelcast topic to send the result to.
 	 */
-	public void setInput(X input) {
-		this.input = input;
+	private ITopic<OutputMessage<Y>> topic;
+
+	/**
+	 * Ctor setting the input message and the output topic.
+	 * 
+	 * @param inputMsg The input message.
+	 * @param topic The output topic.
+	 */
+	protected AbstractActorWorker(InputMessage<X> inputMsg,
+			ITopic<OutputMessage<Y>> topic) {
+		this.inputMsg = inputMsg;
+		this.topic = topic;
 	}
 
 	/*
@@ -48,8 +63,9 @@ public abstract class AbstractActorWorker<X extends Serializable, Y extends Seri
 	 * @see java.util.concurrent.Callable#call()
 	 */
 	@Override
-	public Y call() throws Exception {
-		return this.call(this.input);
+	public void run() {
+		this.topic.publish(new OutputMessage<Y>(this.inputMsg.getMessageId(),
+				this.call(this.inputMsg.getMsg())));
 	}
 
 }
