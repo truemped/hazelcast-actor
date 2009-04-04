@@ -158,7 +158,10 @@ public abstract class AbstractActor<X extends Serializable, Y extends Serializab
 	 * 
 	 * This method simply cycles until {@link #shutdownRequested} is
 	 * <b>true</b>.
+	 * 
+	 * @see java.lang.Runnable#run()
 	 */
+	@Override
 	public final void run() {
 		while (!this.shutdownRequested) {
 			try {
@@ -175,6 +178,7 @@ public abstract class AbstractActor<X extends Serializable, Y extends Serializab
 				e.printStackTrace();
 			}
 		}
+		this.threadCount--;
 	}
 
 	/* (non-Javadoc)
