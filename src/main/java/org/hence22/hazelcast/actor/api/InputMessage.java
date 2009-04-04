@@ -41,13 +41,18 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	 * This message's ID.
 	 */
 	private int msgId;
-	
+
 	/**
+	 * Constructor setting the value for this input message.
+	 * 
+	 * At this point the message id is generated. With this id the calls are
+	 * identified and the result can be identified by the caller.
+	 * 
 	 * @param msg
 	 */
 	public InputMessage(X msg) {
 		this.msg = msg;
-		
+
 		Integer id = this.msg.hashCode();
 		id += new Long(new Date().getTime()).intValue();
 		this.msgId = id.hashCode();
