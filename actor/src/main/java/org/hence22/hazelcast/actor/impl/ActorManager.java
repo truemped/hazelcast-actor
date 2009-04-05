@@ -148,7 +148,7 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 			if (this.actorExecutor.getActiveCount() < this.actorExecutor
 					.getMaximumPoolSize()) {
 				try {
-					InputMessage<X> input = this.inputQueue.poll(100L,
+					InputMessage<X> input = this.inputQueue.poll(10L,
 							TimeUnit.MILLISECONDS);
 					if (input != null) {
 						AbstractActorWorker<X, Y> worker = this.actorFactory
