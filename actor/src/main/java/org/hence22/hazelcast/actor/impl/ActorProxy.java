@@ -66,12 +66,12 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	/**
 	 * The hashmap containing the actor's results.
 	 */
-	private final ConcurrentHashMap<Integer, Y> resultMap = new ConcurrentHashMap<Integer, Y>();
+	private final ConcurrentHashMap<Long, Y> resultMap = new ConcurrentHashMap<Long, Y>();
 
 	/**
 	 * The list of cancelled calls to actors.
 	 */
-	private final ConcurrentSkipListSet<Integer> canceledCalls = new ConcurrentSkipListSet<Integer>();
+	private final ConcurrentSkipListSet<Long> canceledCalls = new ConcurrentSkipListSet<Long>();
 
 	/**
 	 * @param strategy
@@ -147,7 +147,7 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 		/**
 		 * The msgId of the underlying call.
 		 */
-		private int msgId;
+		private long msgId;
 
 		/**
 		 * The actor's result.
@@ -162,18 +162,18 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 		/**
 		 * The result map.
 		 */
-		private ConcurrentHashMap<Integer, Y> resultMap;
+		private ConcurrentHashMap<Long, Y> resultMap;
 
 		/**
 		 * The list of canceled calls.
 		 */
-		private ConcurrentSkipListSet<Integer> canceledCalls;
+		private ConcurrentSkipListSet<Long> canceledCalls;
 
 		/**
 		 * @param msgId
 		 */
-		public ActorFuture(int msgId, ConcurrentHashMap<Integer, Y> resultMap,
-				ConcurrentSkipListSet<Integer> canceledCalls) {
+		public ActorFuture(long msgId, ConcurrentHashMap<Long, Y> resultMap,
+				ConcurrentSkipListSet<Long> canceledCalls) {
 			this.msgId = msgId;
 			this.resultMap = resultMap;
 			this.canceledCalls = canceledCalls;

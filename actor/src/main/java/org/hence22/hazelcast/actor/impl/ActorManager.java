@@ -87,7 +87,7 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	 * @param clazz
 	 * @param maxNumberOfActorThreads
 	 */
-	protected ActorManager(final QueueNamingStrategy strategy,
+	public ActorManager(final QueueNamingStrategy strategy,
 			final ActorWorkerFactory<X, Y> factory,
 			final int maxNumberOfActorThreads) {
 		this(strategy.getInputQueueNameForActor(factory.getClazz()), strategy
@@ -106,7 +106,7 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	 * @param strategy
 	 * @param clazz
 	 */
-	protected ActorManager(final QueueNamingStrategy strategy,
+	public ActorManager(final QueueNamingStrategy strategy,
 			final ActorWorkerFactory<X, Y> factory) {
 		this(strategy.getInputQueueNameForActor(factory.getClazz()), strategy
 				.getOutputTopicNameForActor(factory.getClazz()), factory,
@@ -122,7 +122,7 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	 * @param clazz
 	 * @param maxNumberOfActorThreads
 	 */
-	protected ActorManager(String inputQueueName, String outputTopicName,
+	public ActorManager(String inputQueueName, String outputTopicName,
 			final ActorWorkerFactory<X, Y> factory, int maxNumberOfActorThreads) {
 		this.inputQueueName = inputQueueName;
 		this.inputQueue = Hazelcast.getQueue(this.inputQueueName);

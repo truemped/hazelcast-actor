@@ -32,7 +32,7 @@ public class OutputMessage<Y extends Serializable> implements Serializable {
 	/**
 	 * The id of this message.
 	 */
-	private int msgId;
+	private long msgId;
 
 	/**
 	 * The message itself.
@@ -43,7 +43,7 @@ public class OutputMessage<Y extends Serializable> implements Serializable {
 	 * @param msgId
 	 * @param output
 	 */
-	public OutputMessage(int msgId, Y output) {
+	public OutputMessage(long msgId, Y output) {
 		this.msgId = msgId;
 		this.msg = output;
 	}
@@ -51,7 +51,7 @@ public class OutputMessage<Y extends Serializable> implements Serializable {
 	/**
 	 * @return The message id.
 	 */
-	public int getMessageId() {
+	public long getMessageId() {
 		return msgId;
 	}
 	

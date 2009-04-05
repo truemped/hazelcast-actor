@@ -17,7 +17,8 @@
 package org.hence22.hazelcast.actor.api;
 
 import java.io.Serializable;
-import java.util.Date;
+
+import com.hazelcast.impl.IdGeneratorImpl;
 
 /**
  * A simple serializable class containing the input message for the
@@ -40,7 +41,7 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	/**
 	 * This message's ID.
 	 */
-	private int msgId;
+	private long msgId;
 
 	/**
 	 * Constructor setting the value for this input message.
@@ -53,9 +54,7 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	public InputMessage(X msg) {
 		this.msg = msg;
 
-		Integer id = this.msg.hashCode();
-		id += new Long(new Date().getTime()).intValue();
-		this.msgId = id.hashCode();
+		this.msgId = new IdGeneratorImpl(this.getClass().getName()).newId();
 	}
 
 	/**
@@ -72,7 +71,7 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	 * 
 	 * @return The id of this message.
 	 */
-	public int getMessageId() {
+	public long getMessageId() {
 		return this.msgId;
 	}
 }
