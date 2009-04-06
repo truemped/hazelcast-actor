@@ -29,31 +29,30 @@ import com.hazelcast.core.ITopic;
 
 /**
  * @author truemped@googlemail.com
- *
+ * 
  */
-public class FibonacciActor extends AbstractActorWorker<BigInteger, BigInteger> {
+public class FibonacciAdvancedActor extends
+		AbstractActorWorker<FibonacciAdvancedActorCallParams, BigInteger> {
 
-	private final static ActorProxy<BigInteger, BigInteger> FIBONACCI_ACTOR = new ActorProxy<BigInteger, BigInteger>(
-			new DefaultNamingStrategy(), FibonacciActor.class);
-
-	public FibonacciActor(InputMessage<BigInteger> inputMsg,
+	protected FibonacciAdvancedActor(InputMessage<FibonacciAdvancedActorCallParams> inputMsg,
 			ITopic<OutputMessage<BigInteger>> topic) {
 		super(inputMsg, topic);
 	}
 
+	private final static ActorProxy<FibonacciAdvancedActorCallParams, BigInteger> FIBONACCI_ACTOR = new ActorProxy<FibonacciAdvancedActorCallParams, BigInteger>(
+			new DefaultNamingStrategy(), FibonacciAdvancedActor.class);
+
 	@Override
-	public BigInteger call(BigInteger input) {
-		if (input.equals(BigInteger.ZERO)) {
-			return BigInteger.ZERO;
-		} else if (input.equals(BigInteger.ONE)) {
-			return BigInteger.ONE;
+	public BigInteger call(FibonacciAdvancedActorCallParams input) {
+		if (input.getIter().equals(BigInteger.ZERO)) {
+			return input.getResult();
 		}
+
 		try {
-			return FIBONACCI_ACTOR.call(input.subtract(BigInteger.ONE)).get()
-					.add(
-							FIBONACCI_ACTOR.call(
-									input.subtract(BigInteger.valueOf(2L)))
-									.get());
+			return FIBONACCI_ACTOR.call(
+					new FibonacciAdvancedActorCallParams(input.getIter().subtract(
+							BigInteger.ONE), input.getNext(), input.getResult()
+							.add(input.getNext()))).get();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -62,4 +61,5 @@ public class FibonacciActor extends AbstractActorWorker<BigInteger, BigInteger> 
 
 		return BigInteger.valueOf(-1L);
 	}
+
 }

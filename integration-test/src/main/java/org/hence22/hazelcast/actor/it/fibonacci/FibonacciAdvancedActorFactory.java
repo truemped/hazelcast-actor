@@ -27,20 +27,21 @@ import com.hazelcast.core.ITopic;
 
 /**
  * @author truemped@googlemail.com
- *
+ * 
  */
-public class FibonacciActorFactory implements ActorWorkerFactory<BigInteger, BigInteger> {
+public class FibonacciAdvancedActorFactory implements
+		ActorWorkerFactory<FibonacciAdvancedActorCallParams, BigInteger> {
 
 	@Override
-	public Class<? extends AbstractActorWorker<BigInteger, BigInteger>> getClazz() {
-		return FibonacciActor.class;
+	public Class<? extends AbstractActorWorker<FibonacciAdvancedActorCallParams, BigInteger>> getClazz() {
+		return FibonacciAdvancedActor.class;
 	}
 
 	@Override
-	public AbstractActorWorker<BigInteger, BigInteger> newInstance(
-			InputMessage<BigInteger> input,
+	public AbstractActorWorker<FibonacciAdvancedActorCallParams, BigInteger> newInstance(
+			InputMessage<FibonacciAdvancedActorCallParams> input,
 			ITopic<OutputMessage<BigInteger>> topic) {
-		return new FibonacciActor(input, topic);
+		return new FibonacciAdvancedActor(input, topic);
 	}
 
 }

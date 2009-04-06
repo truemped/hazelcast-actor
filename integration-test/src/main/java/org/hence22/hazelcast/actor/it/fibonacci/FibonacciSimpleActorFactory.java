@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.hence22.hazelcast.actor.it.fibonacci2;
+package org.hence22.hazelcast.actor.it.fibonacci;
 
 import java.math.BigInteger;
 
@@ -27,21 +27,20 @@ import com.hazelcast.core.ITopic;
 
 /**
  * @author truemped@googlemail.com
- * 
+ *
  */
-public class FibonacciActor2Factory implements
-		ActorWorkerFactory<FibonacciCallParams, BigInteger> {
+public class FibonacciSimpleActorFactory implements ActorWorkerFactory<BigInteger, BigInteger> {
 
 	@Override
-	public Class<? extends AbstractActorWorker<FibonacciCallParams, BigInteger>> getClazz() {
-		return FibonacciActor2.class;
+	public Class<? extends AbstractActorWorker<BigInteger, BigInteger>> getClazz() {
+		return FibonacciSimpleActor.class;
 	}
 
 	@Override
-	public AbstractActorWorker<FibonacciCallParams, BigInteger> newInstance(
-			InputMessage<FibonacciCallParams> input,
+	public AbstractActorWorker<BigInteger, BigInteger> newInstance(
+			InputMessage<BigInteger> input,
 			ITopic<OutputMessage<BigInteger>> topic) {
-		return new FibonacciActor2(input, topic);
+		return new FibonacciSimpleActor(input, topic);
 	}
 
 }

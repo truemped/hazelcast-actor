@@ -16,9 +16,15 @@
  */
 package org.hence22.hazelcast.actor.it.fibonacci;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.text.MessageFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
 import org.hence22.hazelcast.actor.impl.ActorManager;
@@ -31,51 +37,98 @@ import org.hence22.hazelcast.actor.impl.DefaultNamingStrategy;
  */
 public class FibonacciTest {
 
+	static HashMap<Integer, Long> DURATION_SIMPLE = new HashMap<Integer, Long>();
+	static HashMap<Integer, Long> DURATION_ADVANCED = new HashMap<Integer, Long>();
+
 	/**
 	 * @param args
 	 * @throws InterruptedException
 	 * @throws ExecutionException
+	 * @throws IOException
 	 */
 	public static void main(String[] args) throws InterruptedException,
+			ExecutionException, IOException {
+
+		testSimpleActor();
+		testAdvancedActor();
+
+		FileChannel outChannel = new FileOutputStream(new File("simple.csv"))
+				.getChannel();
+		for (Integer i : DURATION_SIMPLE.keySet()) {
+			outChannel.write(ByteBuffer.wrap(MessageFormat.format("{0};{1}\n", Math.pow(2, i),
+					DURATION_SIMPLE.get(i)).getBytes()));
+		}
+		outChannel.close();
+
+		outChannel = new FileOutputStream(new File("advanced.csv"))
+				.getChannel();
+		for (Integer i : DURATION_ADVANCED.keySet()) {
+			outChannel.write(ByteBuffer.wrap(MessageFormat.format("{0};{1}\n", Math.pow(2, i),
+					DURATION_ADVANCED.get(i)).getBytes()));
+		}
+
+		System.exit(0);
+	}
+
+	/**
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	static void testSimpleActor() throws InterruptedException,
 			ExecutionException {
 		ActorManager<BigInteger, BigInteger> fibonacciActorManager = new ActorManager<BigInteger, BigInteger>(
-				new DefaultNamingStrategy(), new FibonacciActorFactory());
+				new DefaultNamingStrategy(), new FibonacciSimpleActorFactory());
 		new Thread(fibonacciActorManager).start();
 
 		ActorProxy<BigInteger, BigInteger> fibonacci = new ActorProxy<BigInteger, BigInteger>(
-				new DefaultNamingStrategy(), FibonacciActor.class);
+				new DefaultNamingStrategy(), FibonacciSimpleActor.class);
 
 		// warm up call
 		fibonacci.call(BigInteger.valueOf(3L)).get();
-		
-		long now = new Date().getTime();
-		BigInteger fib3 = fibonacci.call(BigInteger.valueOf(3L)).get();
-		long duration = new Date().getTime() - now;
-		System.out.println(MessageFormat.format(
-				"The fibonacci number of {0} is {1}", 3, fib3));
-		System.out.println(MessageFormat
-				.format("Computation of the 3rd Fibonacci number took {0} ms",
-						duration));
 
-		now = new Date().getTime();
-		BigInteger fib8 = fibonacci.call(BigInteger.valueOf(8L)).get();
-		duration = new Date().getTime() - now;
-		System.out.println(MessageFormat.format(
-				"The fibonacci number of {0} is {1}", 8, fib8));
-		System.out.println(MessageFormat
-				.format("Computation of the 8th Fibonacci number took {0} ms",
-						duration));
-
-		now = new Date().getTime();
-		BigInteger fib10 = fibonacci.call(BigInteger.valueOf(10L)).get();
-		duration = new Date().getTime() - now;
-		System.out.println(MessageFormat.format(
-				"The fibonacci number of {0} is {1}", 10, fib10));
-		System.out.println(MessageFormat.format(
-				"Computation of the 10th Fibonacci number took {0} ms",
-				duration));
+		long now, duration, num;
+		for (int i = 0; i < 5; i++) {
+			num = new Double(Math.pow(2, i)).longValue();
+			now = new Date().getTime();
+			fibonacci.call(BigInteger.valueOf(num)).get();
+			duration = new Date().getTime() - now;
+			DURATION_SIMPLE.put(i, duration);
+		}
 
 		fibonacciActorManager.shutdown();
-		System.exit(0);
+	}
+
+	/**
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	static void testAdvancedActor() throws InterruptedException,
+			ExecutionException {
+		ActorManager<FibonacciAdvancedActorCallParams, BigInteger> fibonacciActorManager = new ActorManager<FibonacciAdvancedActorCallParams, BigInteger>(
+				new DefaultNamingStrategy(),
+				new FibonacciAdvancedActorFactory());
+		new Thread(fibonacciActorManager).start();
+
+		ActorProxy<FibonacciAdvancedActorCallParams, BigInteger> fibonacci = new ActorProxy<FibonacciAdvancedActorCallParams, BigInteger>(
+				new DefaultNamingStrategy(), FibonacciAdvancedActor.class);
+
+		// warm up call
+		fibonacci.call(
+				new FibonacciAdvancedActorCallParams(BigInteger.ONE,
+						BigInteger.ZERO, BigInteger.ONE)).get();
+
+		long now, duration, num;
+		for (int i = 0; i < 8; i++) {
+			num = new Double(Math.pow(2, i)).longValue();
+			now = new Date().getTime();
+			fibonacci.call(
+					new FibonacciAdvancedActorCallParams(BigInteger
+							.valueOf(num), BigInteger.ZERO, BigInteger.ONE))
+					.get();
+			duration = new Date().getTime() - now;
+			DURATION_ADVANCED.put(i, duration);
+		}
+
+		fibonacciActorManager.shutdown();
 	}
 }

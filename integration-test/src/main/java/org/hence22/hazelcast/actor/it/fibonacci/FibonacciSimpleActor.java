@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.hence22.hazelcast.actor.it.fibonacci2;
+package org.hence22.hazelcast.actor.it.fibonacci;
 
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
@@ -29,30 +29,31 @@ import com.hazelcast.core.ITopic;
 
 /**
  * @author truemped@googlemail.com
- * 
+ *
  */
-public class FibonacciActor2 extends
-		AbstractActorWorker<FibonacciCallParams, BigInteger> {
+public class FibonacciSimpleActor extends AbstractActorWorker<BigInteger, BigInteger> {
 
-	protected FibonacciActor2(InputMessage<FibonacciCallParams> inputMsg,
+	private final static ActorProxy<BigInteger, BigInteger> FIBONACCI_ACTOR = new ActorProxy<BigInteger, BigInteger>(
+			new DefaultNamingStrategy(), FibonacciSimpleActor.class);
+
+	public FibonacciSimpleActor(InputMessage<BigInteger> inputMsg,
 			ITopic<OutputMessage<BigInteger>> topic) {
 		super(inputMsg, topic);
 	}
 
-	private final static ActorProxy<FibonacciCallParams, BigInteger> FIBONACCI_ACTOR = new ActorProxy<FibonacciCallParams, BigInteger>(
-			new DefaultNamingStrategy(), FibonacciActor2.class);
-
 	@Override
-	public BigInteger call(FibonacciCallParams input) {
-		if (input.getIter().equals(BigInteger.ZERO)) {
-			return input.getResult();
+	public BigInteger call(BigInteger input) {
+		if (input.equals(BigInteger.ZERO)) {
+			return BigInteger.ZERO;
+		} else if (input.equals(BigInteger.ONE)) {
+			return BigInteger.ONE;
 		}
-
 		try {
-			return FIBONACCI_ACTOR.call(
-					new FibonacciCallParams(input.getIter().subtract(
-							BigInteger.ONE), input.getNext(), input.getResult()
-							.add(input.getNext()))).get();
+			return FIBONACCI_ACTOR.call(input.subtract(BigInteger.ONE)).get()
+					.add(
+							FIBONACCI_ACTOR.call(
+									input.subtract(BigInteger.valueOf(2L)))
+									.get());
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -61,5 +62,4 @@ public class FibonacciActor2 extends
 
 		return BigInteger.valueOf(-1L);
 	}
-
 }

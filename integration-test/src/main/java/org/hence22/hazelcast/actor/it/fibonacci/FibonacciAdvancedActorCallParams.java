@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.hence22.hazelcast.actor.it.fibonacci2;
+package org.hence22.hazelcast.actor.it.fibonacci;
 
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -23,7 +23,7 @@ import java.math.BigInteger;
  * @author truemped@googlemail.com
  * 
  */
-public class FibonacciCallParams implements Serializable {
+public class FibonacciAdvancedActorCallParams implements Serializable {
 
 	/**
 	 * 
@@ -36,7 +36,7 @@ public class FibonacciCallParams implements Serializable {
 
 	private BigInteger next;
 
-	public FibonacciCallParams(BigInteger iter, BigInteger result,
+	public FibonacciAdvancedActorCallParams(BigInteger iter, BigInteger result,
 			BigInteger next) {
 		this.setIter(iter);
 		this.setResult(result);
