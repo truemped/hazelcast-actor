@@ -4,7 +4,7 @@
 	<groupId>org.hence22.hazelcast</groupId>
 	<artifactId>hazelcast-actor</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.1.0</version>
 	<name>hazelcast-actor</name>
 	<dependencies>
 		<dependency>
