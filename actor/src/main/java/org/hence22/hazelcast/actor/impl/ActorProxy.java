@@ -71,7 +71,7 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	/**
 	 * The list of cancelled calls to actors.
 	 */
-	private final ConcurrentSkipListSet<Long> canceledCalls = new ConcurrentSkipListSet<Long>();
+	private final ConcurrentSkipListSet<Long> myCalls = new ConcurrentSkipListSet<Long>();
 
 	/**
 	 * @param strategy
@@ -99,8 +99,9 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	public Future<Y> call(X input) {
 		InputMessage<X> msg = new InputMessage<X>(input);
 		this.inputQueue.offer(msg);
+		this.myCalls.add(msg.getMessageId());
 		return new ActorFuture(msg.getMessageId(), this.resultMap,
-				this.canceledCalls);
+				this.myCalls);
 	}
 
 	/**
@@ -125,14 +126,11 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	 */
 	@Override
 	public void onMessage(OutputMessage<Y> msg) {
-		if (!this.canceledCalls.contains(msg.getMessageId())) {
+		if (this.myCalls.remove(msg.getMessageId())) {
 			this.resultMap.put(msg.getMessageId(), msg.getMessage());
 			synchronized (this.resultMap) {
 				this.resultMap.notifyAll();
 			}
-		} else {
-			// canceled call received. Delete it from the cancelledCalls
-			this.canceledCalls.remove(msg.getMessageId());
 		}
 	}
 
@@ -167,16 +165,16 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 		/**
 		 * The list of canceled calls.
 		 */
-		private ConcurrentSkipListSet<Long> canceledCalls;
+		private ConcurrentSkipListSet<Long> myCalls;
 
 		/**
 		 * @param msgId
 		 */
 		public ActorFuture(long msgId, ConcurrentHashMap<Long, Y> resultMap,
-				ConcurrentSkipListSet<Long> canceledCalls) {
+				ConcurrentSkipListSet<Long> myCalls) {
 			this.msgId = msgId;
 			this.resultMap = resultMap;
-			this.canceledCalls = canceledCalls;
+			this.myCalls = myCalls;
 		}
 
 		/*
@@ -186,10 +184,9 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 		 */
 		@Override
 		public boolean cancel(boolean mayInterruptIfRunning) {
-			if (this.result != null || this.canceledCalls.contains(this.msgId)) {
+			if (this.result != null || !this.myCalls.remove(this.msgId)) {
 				return false;
 			}
-			this.cancelled = this.canceledCalls.add(this.msgId);
 			return this.cancelled;
 		}
 
@@ -247,7 +244,7 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 		 */
 		@Override
 		public boolean isCancelled() {
-			return this.canceledCalls.contains(this.msgId);
+			return this.myCalls.contains(this.msgId);
 		}
 
 		/*
