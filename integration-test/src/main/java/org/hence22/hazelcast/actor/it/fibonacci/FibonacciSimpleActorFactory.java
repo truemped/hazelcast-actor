@@ -38,8 +38,8 @@ public class FibonacciSimpleActorFactory implements ActorWorkerFactory<BigIntege
 
 	@Override
 	public AbstractActorWorker<BigInteger, BigInteger> newInstance(
-			InputMessage<BigInteger> input,
-			ITopic<OutputMessage<BigInteger>> topic) {
+			final InputMessage<BigInteger> input,
+			final ITopic<OutputMessage<BigInteger>> topic) {
 		return new FibonacciSimpleActor(input, topic);
 	}
 

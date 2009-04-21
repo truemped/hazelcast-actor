@@ -29,9 +29,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
+import org.hence22.hazelcast.actor.api.Director;
 import org.hence22.hazelcast.actor.impl.ActorManager;
-import org.hence22.hazelcast.actor.impl.ActorProxy;
 import org.hence22.hazelcast.actor.impl.DefaultNamingStrategy;
+import org.hence22.hazelcast.actor.impl.DirectorImpl;
 
 import com.hazelcast.core.Hazelcast;
 
@@ -44,8 +45,8 @@ public class FibonacciTest {
 	static HashMap<Integer, Long> DURATION_SIMPLE = new HashMap<Integer, Long>();
 	static HashMap<Integer, Long> DURATION_ADVANCED = new HashMap<Integer, Long>();
 	static ActorManager<FibonacciAdvancedActorCallParams, BigInteger> ADVANCED_ACTOR_MANAGER;
-	static ActorProxy<FibonacciAdvancedActorCallParams, BigInteger> ADVANCED_FIBONACCI_ACTOR = new ActorProxy<FibonacciAdvancedActorCallParams, BigInteger>(
-			new DefaultNamingStrategy(), FibonacciAdvancedActor.class);
+	static Director<FibonacciAdvancedActorCallParams, BigInteger> ADVANCED_FIBONACCI_ACTOR = new DirectorImpl<FibonacciAdvancedActorCallParams, BigInteger>(
+			FibonacciAdvancedActor.class);
 
 	/**
 	 * @param args
@@ -116,8 +117,8 @@ public class FibonacciTest {
 				new DefaultNamingStrategy(), new FibonacciSimpleActorFactory());
 		new Thread(fibonacciActorManager).start();
 
-		ActorProxy<BigInteger, BigInteger> fibonacci = new ActorProxy<BigInteger, BigInteger>(
-				new DefaultNamingStrategy(), FibonacciSimpleActor.class);
+		Director<BigInteger, BigInteger> fibonacci = new DirectorImpl<BigInteger, BigInteger>(
+				FibonacciSimpleActor.class);
 
 		// warm up call
 		fibonacci.call(BigInteger.valueOf(3L)).get();

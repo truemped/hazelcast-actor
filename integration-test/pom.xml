@@ -4,7 +4,7 @@
   <groupId>org.hence22.hazelcast.actor.it</groupId>
   <artifactId>integration-test</artifactId>
   <packaging>jar</packaging>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <name>integration-test</name>
   <url>http://maven.apache.org</url>
   <dependencies>
@@ -17,7 +17,7 @@
     <dependency>
     	<groupId>org.hence22.hazelcast</groupId>
     	<artifactId>hazelcast-actor</artifactId>
-    	<version>0.1.0</version>
+    	<version>0.2.0</version>
     </dependency>
   </dependencies>
 	<build>

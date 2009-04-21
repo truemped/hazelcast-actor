@@ -19,11 +19,11 @@ package org.hence22.hazelcast.actor.it.fibonacci;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
 
+import org.hence22.hazelcast.actor.api.Director;
 import org.hence22.hazelcast.actor.api.InputMessage;
 import org.hence22.hazelcast.actor.api.OutputMessage;
 import org.hence22.hazelcast.actor.impl.AbstractActorWorker;
-import org.hence22.hazelcast.actor.impl.ActorProxy;
-import org.hence22.hazelcast.actor.impl.DefaultNamingStrategy;
+import org.hence22.hazelcast.actor.impl.DirectorImpl;
 
 import com.hazelcast.core.ITopic;
 
@@ -34,13 +34,14 @@ import com.hazelcast.core.ITopic;
 public class FibonacciAdvancedActor extends
 		AbstractActorWorker<FibonacciAdvancedActorCallParams, BigInteger> {
 
-	protected FibonacciAdvancedActor(InputMessage<FibonacciAdvancedActorCallParams> inputMsg,
+	protected FibonacciAdvancedActor(
+			InputMessage<FibonacciAdvancedActorCallParams> inputMsg,
 			ITopic<OutputMessage<BigInteger>> topic) {
 		super(inputMsg, topic);
 	}
 
-	private final static ActorProxy<FibonacciAdvancedActorCallParams, BigInteger> FIBONACCI_ACTOR = new ActorProxy<FibonacciAdvancedActorCallParams, BigInteger>(
-			new DefaultNamingStrategy(), FibonacciAdvancedActor.class);
+	private final static Director<FibonacciAdvancedActorCallParams, BigInteger> FIBONACCI_ACTOR = new DirectorImpl<FibonacciAdvancedActorCallParams, BigInteger>(
+			FibonacciAdvancedActor.class);
 
 	@Override
 	public BigInteger call(FibonacciAdvancedActorCallParams input) {
@@ -50,9 +51,9 @@ public class FibonacciAdvancedActor extends
 
 		try {
 			return FIBONACCI_ACTOR.call(
-					new FibonacciAdvancedActorCallParams(input.getIter().subtract(
-							BigInteger.ONE), input.getNext(), input.getResult()
-							.add(input.getNext()))).get();
+					new FibonacciAdvancedActorCallParams(input.getIter()
+							.subtract(BigInteger.ONE), input.getNext(), input
+							.getResult().add(input.getNext()))).get();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {

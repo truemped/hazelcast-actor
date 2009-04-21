@@ -19,25 +19,26 @@ package org.hence22.hazelcast.actor.it.fibonacci;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
 
+import org.hence22.hazelcast.actor.api.Director;
 import org.hence22.hazelcast.actor.api.InputMessage;
 import org.hence22.hazelcast.actor.api.OutputMessage;
 import org.hence22.hazelcast.actor.impl.AbstractActorWorker;
-import org.hence22.hazelcast.actor.impl.ActorProxy;
-import org.hence22.hazelcast.actor.impl.DefaultNamingStrategy;
+import org.hence22.hazelcast.actor.impl.DirectorImpl;
 
 import com.hazelcast.core.ITopic;
 
 /**
  * @author truemped@googlemail.com
- *
+ * 
  */
-public class FibonacciSimpleActor extends AbstractActorWorker<BigInteger, BigInteger> {
+public class FibonacciSimpleActor extends
+		AbstractActorWorker<BigInteger, BigInteger> {
 
-	private final static ActorProxy<BigInteger, BigInteger> FIBONACCI_ACTOR = new ActorProxy<BigInteger, BigInteger>(
-			new DefaultNamingStrategy(), FibonacciSimpleActor.class);
+	private final static Director<BigInteger, BigInteger> FIBONACCI_ACTOR = new DirectorImpl<BigInteger, BigInteger>(
+			FibonacciSimpleActor.class);
 
-	public FibonacciSimpleActor(InputMessage<BigInteger> inputMsg,
-			ITopic<OutputMessage<BigInteger>> topic) {
+	public FibonacciSimpleActor(final InputMessage<BigInteger> inputMsg,
+			final ITopic<OutputMessage<BigInteger>> topic) {
 		super(inputMsg, topic);
 	}
 

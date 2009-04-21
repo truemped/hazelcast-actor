@@ -71,12 +71,7 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 	/**
 	 * The list of cancelled calls to actors.
 	 */
-	private final ConcurrentSkipListSet<Long> canceledCalls = new ConcurrentSkipListSet<Long>();
-
-	/**
-	 * A list for calles issued by me.
-	 */
-	private final ConcurrentSkipListSet<Long> callsByMe = new ConcurrentSkipListSet<Long>();
+	private final ConcurrentSkipListSet<Long> myCalls = new ConcurrentSkipListSet<Long>();
 
 	/**
 	 * @param actor
@@ -98,25 +93,28 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 	 * @param inputQueueName
 	 * @param outputTopicName
 	 */
-	public DirectorImpl(final String inputQueueName, final String outputTopicName) {
+	public DirectorImpl(final String inputQueueName,
+			final String outputTopicName) {
 		this.inputQueue = Hazelcast.getQueue(inputQueueName);
 		this.outputTopic = Hazelcast.getTopic(outputTopicName);
 		this.outputTopic.addMessageListener(this);
 	}
 
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.hence22.hazelcast.actor.api.Director#call(java.io.Serializable)
 	 */
 	public Future<Y> call(final X input) {
 		InputMessage<X> msg = new InputMessage<X>(input);
 		this.inputQueue.offer(msg);
-		this.callsByMe.add(msg.getMessageId());
-		return new ActorFuture(msg.getMessageId(), this.resultMap,
-				this.canceledCalls);
+		this.myCalls.add(msg.getMessageId());
+		return new ActorFuture(msg.getMessageId(), this.resultMap, this.myCalls);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.hence22.hazelcast.actor.api.Director#call(java.util.List)
 	 */
 	public List<Future<Y>> call(final List<X> inputs) {
@@ -134,15 +132,11 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 	 */
 	@Override
 	public void onMessage(OutputMessage<Y> msg) {
-		if (!this.canceledCalls.contains(msg.getMessageId())
-				&& this.callsByMe.remove(msg.getMessageId())) {
+		if (this.myCalls.remove(msg.getMessageId())) {
 			this.resultMap.put(msg.getMessageId(), msg.getMessage());
 			synchronized (this.resultMap) {
 				this.resultMap.notifyAll();
 			}
-		} else {
-			// canceled call received. Delete it from the cancelledCalls
-			this.canceledCalls.remove(msg.getMessageId());
 		}
 	}
 
@@ -177,16 +171,17 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 		/**
 		 * The list of canceled calls.
 		 */
-		private ConcurrentSkipListSet<Long> canceledCalls;
+		private ConcurrentSkipListSet<Long> myCalls;
 
 		/**
 		 * @param msgId
 		 */
-		public ActorFuture(final long msgId, final ConcurrentHashMap<Long, Y> resultMap,
-				final ConcurrentSkipListSet<Long> canceledCalls) {
+		public ActorFuture(final long msgId,
+				final ConcurrentHashMap<Long, Y> resultMap,
+				final ConcurrentSkipListSet<Long> myCalls) {
 			this.msgId = msgId;
 			this.resultMap = resultMap;
-			this.canceledCalls = canceledCalls;
+			this.myCalls = myCalls;
 		}
 
 		/*
@@ -196,10 +191,10 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 		 */
 		@Override
 		public boolean cancel(final boolean mayInterruptIfRunning) {
-			if (this.result != null || this.canceledCalls.contains(this.msgId)) {
+			if (this.result != null || !this.myCalls.remove(this.msgId)) {
 				return false;
 			}
-			this.cancelled = this.canceledCalls.add(this.msgId);
+			this.cancelled = true;
 			return this.cancelled;
 		}
 
@@ -230,8 +225,9 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 		 * java.util.concurrent.TimeUnit)
 		 */
 		@Override
-		public Y get(final long timeout, final TimeUnit unit) throws InterruptedException,
-				ExecutionException, TimeoutException {
+		public Y get(final long timeout, final TimeUnit unit)
+				throws InterruptedException, ExecutionException,
+				TimeoutException {
 			if (!this.resultMap.containsKey(this.msgId)) {
 				synchronized (this.resultMap) {
 					this.resultMap.wait(unit.toMillis(timeout));
@@ -257,7 +253,7 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 		 */
 		@Override
 		public boolean isCancelled() {
-			return this.canceledCalls.contains(this.msgId);
+			return this.cancelled;
 		}
 
 		/*
