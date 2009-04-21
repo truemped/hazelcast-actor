@@ -74,6 +74,11 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	private final ConcurrentSkipListSet<Long> canceledCalls = new ConcurrentSkipListSet<Long>();
 
 	/**
+	 * A list for calles issued by me.
+	 */
+	private final ConcurrentSkipListSet<Long> callsByMe = new ConcurrentSkipListSet<Long>();
+	
+	/**
 	 * @param strategy
 	 * @param actor
 	 */
@@ -99,6 +104,7 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	public Future<Y> call(X input) {
 		InputMessage<X> msg = new InputMessage<X>(input);
 		this.inputQueue.offer(msg);
+		this.callsByMe.add(msg.getMessageId());
 		return new ActorFuture(msg.getMessageId(), this.resultMap,
 				this.canceledCalls);
 	}
@@ -125,7 +131,8 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	 */
 	@Override
 	public void onMessage(OutputMessage<Y> msg) {
-		if (!this.canceledCalls.contains(msg.getMessageId())) {
+		if (!this.canceledCalls.contains(msg.getMessageId())
+				&& this.callsByMe.remove(msg.getMessageId())) {
 			this.resultMap.put(msg.getMessageId(), msg.getMessage());
 			synchronized (this.resultMap) {
 				this.resultMap.notifyAll();
