@@ -66,7 +66,7 @@ public class AbstractActorTest {
 			ExecutionException {
 		new EchoActor();
 
-		ActorProxy<String, String> echoProxy = new ActorProxy<String, String>(
+		DirectorImpl<String, String> echoProxy = new DirectorImpl<String, String>(
 				new DefaultNamingStrategy(), EchoActor.class);
 
 		Future<String> future = echoProxy.call("Test");
@@ -82,7 +82,7 @@ public class AbstractActorTest {
 
 		new EchoActor();
 
-		ActorProxy<String, String> echoProxy = new ActorProxy<String, String>(
+		DirectorImpl<String, String> echoProxy = new DirectorImpl<String, String>(
 				new DefaultNamingStrategy(), EchoActor.class);
 
 		List<Future<String>> futures;

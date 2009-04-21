@@ -26,10 +26,14 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 import org.hence22.hazelcast.actor.impl.ActorManager;
 import org.hence22.hazelcast.actor.impl.ActorProxy;
 import org.hence22.hazelcast.actor.impl.DefaultNamingStrategy;
+
+import com.hazelcast.core.Hazelcast;
 
 /**
  * @author truemped@googlemail.com
@@ -39,6 +43,9 @@ public class FibonacciTest {
 
 	static HashMap<Integer, Long> DURATION_SIMPLE = new HashMap<Integer, Long>();
 	static HashMap<Integer, Long> DURATION_ADVANCED = new HashMap<Integer, Long>();
+	static ActorManager<FibonacciAdvancedActorCallParams, BigInteger> ADVANCED_ACTOR_MANAGER;
+	static ActorProxy<FibonacciAdvancedActorCallParams, BigInteger> ADVANCED_FIBONACCI_ACTOR = new ActorProxy<FibonacciAdvancedActorCallParams, BigInteger>(
+			new DefaultNamingStrategy(), FibonacciAdvancedActor.class);
 
 	/**
 	 * @param args
@@ -49,22 +56,51 @@ public class FibonacciTest {
 	public static void main(String[] args) throws InterruptedException,
 			ExecutionException, IOException {
 
-		testSimpleActor();
-		testAdvancedActor();
+		if (args.length > 0 && args[0].toLowerCase().equals("-simple")) {
+
+			// the simple tests
+			testSimpleActor();
+			testAdvancedActor();
+
+		} else if (args.length > 0
+				&& args[0].toLowerCase().equals("-distributed")) {
+
+			// the distributed tests
+			
+			// start the advanced actor manager
+			startAdvancedActorManager();
+			
+			Lock master = Hazelcast.getLock("actorMasterTestingLock");
+			if (master.tryLock(100L, TimeUnit.MILLISECONDS)) {
+				// I am the master, start the fibonacci tests:
+				System.out.println("Press ENTER to start");
+				System.in.read();
+				callAdvancedFibonacciActor();
+			}else {
+				// wait to stop the slave manually
+				System.out.println("Press ENTER to stop this slave");
+				System.in.read();
+			}
+		} else {
+			System.err.println("Usage:\n"+
+					"\t-simple-tUse the simple testings\n"+
+					"\t-distributed\tUse the distributed tests\n");
+			System.exit(1);
+		}
 
 		FileChannel outChannel = new FileOutputStream(new File("simple.csv"))
 				.getChannel();
 		for (Integer i : DURATION_SIMPLE.keySet()) {
-			outChannel.write(ByteBuffer.wrap(MessageFormat.format("{0};{1}\n", Math.pow(2, i),
-					DURATION_SIMPLE.get(i)).getBytes()));
+			outChannel.write(ByteBuffer.wrap(MessageFormat.format("{0};{1}\n",
+					Math.pow(2, i), DURATION_SIMPLE.get(i)).getBytes()));
 		}
 		outChannel.close();
 
 		outChannel = new FileOutputStream(new File("advanced.csv"))
 				.getChannel();
 		for (Integer i : DURATION_ADVANCED.keySet()) {
-			outChannel.write(ByteBuffer.wrap(MessageFormat.format("{0};{1}\n", Math.pow(2, i),
-					DURATION_ADVANCED.get(i)).getBytes()));
+			outChannel.write(ByteBuffer.wrap(MessageFormat.format("{0};{1}\n",
+					Math.pow(2, i), DURATION_ADVANCED.get(i)).getBytes()));
 		}
 
 		System.exit(0);
@@ -99,21 +135,35 @@ public class FibonacciTest {
 	}
 
 	/**
+	 * 
+	 */
+	static void startAdvancedActorManager() {
+		if (ADVANCED_ACTOR_MANAGER == null) {
+			ADVANCED_ACTOR_MANAGER = new ActorManager<FibonacciAdvancedActorCallParams, BigInteger>(
+					new DefaultNamingStrategy(),
+					new FibonacciAdvancedActorFactory());
+			new Thread(ADVANCED_ACTOR_MANAGER).start();
+		}
+	}
+
+	/**
+	 * 
+	 */
+	static void stopAdvancedActorManager() {
+		if (ADVANCED_ACTOR_MANAGER != null) {
+			ADVANCED_ACTOR_MANAGER.shutdown();
+		}
+	}
+
+	/**
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	static void testAdvancedActor() throws InterruptedException,
+	static void callAdvancedFibonacciActor() throws InterruptedException,
 			ExecutionException {
-		ActorManager<FibonacciAdvancedActorCallParams, BigInteger> fibonacciActorManager = new ActorManager<FibonacciAdvancedActorCallParams, BigInteger>(
-				new DefaultNamingStrategy(),
-				new FibonacciAdvancedActorFactory());
-		new Thread(fibonacciActorManager).start();
-
-		ActorProxy<FibonacciAdvancedActorCallParams, BigInteger> fibonacci = new ActorProxy<FibonacciAdvancedActorCallParams, BigInteger>(
-				new DefaultNamingStrategy(), FibonacciAdvancedActor.class);
 
 		// warm up call
-		fibonacci.call(
+		ADVANCED_FIBONACCI_ACTOR.call(
 				new FibonacciAdvancedActorCallParams(BigInteger.ONE,
 						BigInteger.ZERO, BigInteger.ONE)).get();
 
@@ -121,7 +171,7 @@ public class FibonacciTest {
 		for (int i = 0; i < 8; i++) {
 			num = new Double(Math.pow(2, i)).longValue();
 			now = new Date().getTime();
-			fibonacci.call(
+			ADVANCED_FIBONACCI_ACTOR.call(
 					new FibonacciAdvancedActorCallParams(BigInteger
 							.valueOf(num), BigInteger.ZERO, BigInteger.ONE))
 					.get();
@@ -129,6 +179,18 @@ public class FibonacciTest {
 			DURATION_ADVANCED.put(i, duration);
 		}
 
-		fibonacciActorManager.shutdown();
+	}
+
+	/**
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	static void testAdvancedActor() throws InterruptedException,
+			ExecutionException {
+
+		startAdvancedActorManager();
+		callAdvancedFibonacciActor();
+		stopAdvancedActorManager();
+
 	}
 }

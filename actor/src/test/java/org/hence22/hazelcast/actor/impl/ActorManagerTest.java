@@ -102,7 +102,7 @@ public class ActorManagerTest {
 		Thread manager = new Thread(echoManager);
 		manager.start();
 
-		ActorProxy<String, String> echoProxy = new ActorProxy<String, String>(
+		DirectorImpl<String, String> echoProxy = new DirectorImpl<String, String>(
 				new DefaultNamingStrategy(), EchoActor.class);
 
 		Future<String> result = echoProxy.call("Test");
@@ -120,7 +120,7 @@ public class ActorManagerTest {
 		Thread manager = new Thread(echoManager);
 		manager.start();
 
-		ActorProxy<String, String> echoProxy = new ActorProxy<String, String>(
+		DirectorImpl<String, String> echoProxy = new DirectorImpl<String, String>(
 				new DefaultNamingStrategy(), EchoActor.class);
 
 		List<Future<String>> futures;

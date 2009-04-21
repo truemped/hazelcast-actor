@@ -29,12 +29,12 @@ public class DefaultNamingStrategy implements QueueNamingStrategy {
 	/**
 	 * Namespace prefix for this naming strategy.
 	 */
-	private String namespacePrefix;
+	private final String namespacePrefix;
 
 	/**
 	 * Appendix for the result queue;
 	 */
-	private String resultQueueAppendix;
+	private final String resultQueueAppendix;
 
 	/**
 	 * Constructor setting the {@link #namespacePrefix} to the empty string.
@@ -46,7 +46,7 @@ public class DefaultNamingStrategy implements QueueNamingStrategy {
 	/**
 	 * @param namespacePrefix
 	 */
-	public DefaultNamingStrategy(String namespacePrefix) {
+	public DefaultNamingStrategy(final String namespacePrefix) {
 		this(namespacePrefix, ".results");
 	}
 
@@ -54,8 +54,8 @@ public class DefaultNamingStrategy implements QueueNamingStrategy {
 	 * @param namespacePrefix
 	 * @param resultQueueAppendix
 	 */
-	public DefaultNamingStrategy(String namespacePrefix,
-			String resultQueueAppendix) {
+	public DefaultNamingStrategy(final String namespacePrefix,
+			final String resultQueueAppendix) {
 		this.namespacePrefix = namespacePrefix;
 		this.resultQueueAppendix = resultQueueAppendix;
 	}
@@ -68,7 +68,7 @@ public class DefaultNamingStrategy implements QueueNamingStrategy {
 	 * (java.lang.Class)
 	 */
 	@Override
-	public String getInputQueueNameForActor(Class<?> actor) {
+	public String getInputQueueNameForActor(final Class<?> actor) {
 		return this.namespacePrefix + actor.getName();
 	}
 
@@ -79,7 +79,7 @@ public class DefaultNamingStrategy implements QueueNamingStrategy {
 	 * getResultQueueNameForActor(java.lang.Class)
 	 */
 	@Override
-	public String getOutputTopicNameForActor(Class<?> actor) {
+	public String getOutputTopicNameForActor(final Class<?> actor) {
 		return this.namespacePrefix + actor.getName()
 				+ this.resultQueueAppendix;
 	}

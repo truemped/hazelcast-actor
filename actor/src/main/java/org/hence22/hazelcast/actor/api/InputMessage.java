@@ -18,6 +18,7 @@ package org.hence22.hazelcast.actor.api;
 
 import java.io.Serializable;
 
+import com.hazelcast.core.IdGenerator;
 import com.hazelcast.impl.IdGeneratorImpl;
 
 /**
@@ -28,6 +29,11 @@ import com.hazelcast.impl.IdGeneratorImpl;
  */
 public class InputMessage<X extends Serializable> implements Serializable {
 
+	/**
+	 * The generator for uids.
+	 */
+	private static final IdGenerator UID_GENERATOR = new IdGeneratorImpl("org.hence22.hazelcast-actor.message-uids");
+	
 	/**
 	 * The serial version uid.
 	 */
@@ -54,7 +60,7 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	public InputMessage(X msg) {
 		this.msg = msg;
 
-		this.msgId = new IdGeneratorImpl(this.getClass().getName()).newId();
+		this.msgId = UID_GENERATOR.newId();
 	}
 
 	/**

@@ -34,10 +34,9 @@ import com.hazelcast.core.ITopic;
 /**
  * A manager for running actors in a thread pool.
  * 
- * Usage:
- * <code>
- * ActorManager&lt;String, String&gt; myActorManager = new ActorManager<String,
- *     String>(new DefaultNamingStrategy(), new MyActorFactory());
+ * Usage: <code>
+ * ActorManager&lt;String, String&gt; myActorManager = new ActorManager&lt;String,
+ *     String&gt;(new DefaultNamingStrategy(), new MyActorFactory());
  * 
  * Thread manager = new Thread(echoManager);
  * 
@@ -52,27 +51,27 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	/**
 	 * The executor service for this underlying actor.
 	 */
-	private ThreadPoolExecutor actorExecutor;
+	private final ThreadPoolExecutor actorExecutor;
 
 	/**
 	 * The name of this actor's input queue.
 	 */
-	private String inputQueueName;
+	private final String inputQueueName;
 
 	/**
 	 * The input queue of this actor.
 	 */
-	private BlockingQueue<InputMessage<X>> inputQueue;
+	private final BlockingQueue<InputMessage<X>> inputQueue;
 
 	/**
 	 * The output topic of this actor.
 	 */
-	private ITopic<OutputMessage<Y>> outputTopic;
+	private final ITopic<OutputMessage<Y>> outputTopic;
 
 	/**
 	 * The actor class.
 	 */
-	private ActorWorkerFactory<X, Y> actorFactory;
+	private final ActorWorkerFactory<X, Y> actorFactory;
 
 	/**
 	 * Indicate a shutdown request.
@@ -122,8 +121,10 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	 * @param clazz
 	 * @param maxNumberOfActorThreads
 	 */
-	public ActorManager(String inputQueueName, String outputTopicName,
-			final ActorWorkerFactory<X, Y> factory, int maxNumberOfActorThreads) {
+	public ActorManager(final String inputQueueName,
+			final String outputTopicName,
+			final ActorWorkerFactory<X, Y> factory,
+			final int maxNumberOfActorThreads) {
 		this.inputQueueName = inputQueueName;
 		this.inputQueue = Hazelcast.getQueue(this.inputQueueName);
 		this.outputTopic = Hazelcast.getTopic(outputTopicName);

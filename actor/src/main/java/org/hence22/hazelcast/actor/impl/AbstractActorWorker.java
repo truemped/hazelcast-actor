@@ -38,12 +38,12 @@ public abstract class AbstractActorWorker<X extends Serializable, Y extends Seri
 	/**
 	 * The input message for this actor instance.
 	 */
-	private InputMessage<X> inputMsg;
+	private final InputMessage<X> inputMsg;
 
 	/**
 	 * The Hazelcast topic to send the result to.
 	 */
-	private ITopic<OutputMessage<Y>> topic;
+	private final ITopic<OutputMessage<Y>> topic;
 
 	/**
 	 * Ctor setting the input message and the output topic.
@@ -51,8 +51,8 @@ public abstract class AbstractActorWorker<X extends Serializable, Y extends Seri
 	 * @param inputMsg The input message.
 	 * @param topic The output topic.
 	 */
-	protected AbstractActorWorker(InputMessage<X> inputMsg,
-			ITopic<OutputMessage<Y>> topic) {
+	protected AbstractActorWorker(final InputMessage<X> inputMsg,
+			final ITopic<OutputMessage<Y>> topic) {
 		this.inputMsg = inputMsg;
 		this.topic = topic;
 	}

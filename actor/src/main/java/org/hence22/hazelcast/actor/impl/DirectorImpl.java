@@ -28,30 +28,30 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.hence22.hazelcast.actor.api.Actor;
+import org.hence22.hazelcast.actor.api.Director;
 import org.hence22.hazelcast.actor.api.InputMessage;
 import org.hence22.hazelcast.actor.api.OutputMessage;
 import org.hence22.hazelcast.actor.api.QueueNamingStrategy;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.ITopic;
-import com.hazelcast.core.MessageListener;
 
 /**
  * A simple proxy class for actors.
  * 
- * In order to use the actor in the caller use this {@link ActorProxy}. An
+ * In order to use the actor in the caller use this {@link DirectorImpl}. An
  * example usage for the EchoActor described in {@link Actor} could be:
  * 
  * <code>
- * ActorProxy&lt:String, String&gt: echoProxy = new ActorProxy&lt:String, String&gt:( new DefaultNamingStrategy(), EchoActor.class );
+ * Director&lt:String, String&gt: echoProxy = new DirectorImpl&lt:String, String&gt:( new DefaultNamingStrategy(), EchoActor.class );
  * Future&lt:String&gt: echoFuture = echoProxy.call( "Test" );
  * System.out.println( echoFuture.get() );
  * </code>
  * 
  * @author truemped@googlemail.com
  */
-public class ActorProxy<X extends Serializable, Y extends Serializable>
-		implements MessageListener<OutputMessage<Y>> {
+public class DirectorImpl<X extends Serializable, Y extends Serializable>
+		implements Director<X, Y> {
 
 	/**
 	 * The actor's input queue.
@@ -77,12 +77,19 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	 * A list for calles issued by me.
 	 */
 	private final ConcurrentSkipListSet<Long> callsByMe = new ConcurrentSkipListSet<Long>();
-	
+
+	/**
+	 * @param actor
+	 */
+	public DirectorImpl(final Class<?> actor) {
+		this(new DefaultNamingStrategy(), actor);
+	}
+
 	/**
 	 * @param strategy
 	 * @param actor
 	 */
-	public ActorProxy(QueueNamingStrategy strategy, Class<?> actor) {
+	public DirectorImpl(final QueueNamingStrategy strategy, final Class<?> actor) {
 		this(strategy.getInputQueueNameForActor(actor), strategy
 				.getOutputTopicNameForActor(actor));
 	}
@@ -91,17 +98,17 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 	 * @param inputQueueName
 	 * @param outputTopicName
 	 */
-	public ActorProxy(String inputQueueName, String outputTopicName) {
+	public DirectorImpl(final String inputQueueName, final String outputTopicName) {
 		this.inputQueue = Hazelcast.getQueue(inputQueueName);
 		this.outputTopic = Hazelcast.getTopic(outputTopicName);
 		this.outputTopic.addMessageListener(this);
 	}
 
-	/**
-	 * @param input
-	 * @return
+
+	/* (non-Javadoc)
+	 * @see org.hence22.hazelcast.actor.api.Director#call(java.io.Serializable)
 	 */
-	public Future<Y> call(X input) {
+	public Future<Y> call(final X input) {
 		InputMessage<X> msg = new InputMessage<X>(input);
 		this.inputQueue.offer(msg);
 		this.callsByMe.add(msg.getMessageId());
@@ -109,14 +116,10 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 				this.canceledCalls);
 	}
 
-	/**
-	 * Submit a list of input messages to the actor.
-	 * 
-	 * @param inputs
-	 *            The list of input messages.
-	 * @return The list of futures.
+	/* (non-Javadoc)
+	 * @see org.hence22.hazelcast.actor.api.Director#call(java.util.List)
 	 */
-	public List<Future<Y>> call(List<X> inputs) {
+	public List<Future<Y>> call(final List<X> inputs) {
 		List<Future<Y>> futures = new ArrayList<Future<Y>>();
 		for (X input : inputs) {
 			futures.add(this.call(input));
@@ -154,7 +157,7 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 		/**
 		 * The msgId of the underlying call.
 		 */
-		private long msgId;
+		private final long msgId;
 
 		/**
 		 * The actor's result.
@@ -179,8 +182,8 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 		/**
 		 * @param msgId
 		 */
-		public ActorFuture(long msgId, ConcurrentHashMap<Long, Y> resultMap,
-				ConcurrentSkipListSet<Long> canceledCalls) {
+		public ActorFuture(final long msgId, final ConcurrentHashMap<Long, Y> resultMap,
+				final ConcurrentSkipListSet<Long> canceledCalls) {
 			this.msgId = msgId;
 			this.resultMap = resultMap;
 			this.canceledCalls = canceledCalls;
@@ -192,7 +195,7 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 		 * @see java.util.concurrent.Future#cancel(boolean)
 		 */
 		@Override
-		public boolean cancel(boolean mayInterruptIfRunning) {
+		public boolean cancel(final boolean mayInterruptIfRunning) {
 			if (this.result != null || this.canceledCalls.contains(this.msgId)) {
 				return false;
 			}
@@ -227,7 +230,7 @@ public class ActorProxy<X extends Serializable, Y extends Serializable>
 		 * java.util.concurrent.TimeUnit)
 		 */
 		@Override
-		public Y get(long timeout, TimeUnit unit) throws InterruptedException,
+		public Y get(final long timeout, final TimeUnit unit) throws InterruptedException,
 				ExecutionException, TimeoutException {
 			if (!this.resultMap.containsKey(this.msgId)) {
 				synchronized (this.resultMap) {
