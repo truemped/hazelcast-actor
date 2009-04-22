@@ -1,25 +1,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.hence22.hazelcast.actor.it</groupId>
-  <artifactId>integration-test</artifactId>
-  <packaging>jar</packaging>
-  <version>0.2.0</version>
-  <name>integration-test</name>
-  <url>http://maven.apache.org</url>
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.4</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>org.hence22.hazelcast</groupId>
-    	<artifactId>hazelcast-actor</artifactId>
-    	<version>0.2.0</version>
-    </dependency>
-  </dependencies>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.hence22.hazelcast.actor.it</groupId>
+	<artifactId>integration-test</artifactId>
+	<packaging>jar</packaging>
+	<version>0.2.0</version>
+	<name>integration-test</name>
+	<url>http://maven.apache.org</url>
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hence22.hazelcast</groupId>
+			<artifactId>hazelcast-actor</artifactId>
+			<version>0.2.0</version>
+		</dependency>
+	</dependencies>
 	<build>
 		<plugins>
 			<plugin>
@@ -28,6 +28,21 @@
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<index>true</index>
+						<manifest>
+							<addClasspath>true</addClasspath>
+						</manifest>
+						<manifestEntries>
+							<Main-Class>org.hence22.hazelcast.actor.it.fibonacci.FibonacciTest</Main-Class>
+						</manifestEntries>
+					</archive>
 				</configuration>
 			</plugin>
 		</plugins>
