@@ -67,25 +67,25 @@ public class FibonacciTest {
 				&& args[0].toLowerCase().equals("-distributed")) {
 
 			// the distributed tests
-			
+
 			// start the advanced actor manager
 			startAdvancedActorManager();
-			
+
 			Lock master = Hazelcast.getLock("actorMasterTestingLock");
 			if (master.tryLock(100L, TimeUnit.MILLISECONDS)) {
 				// I am the master, start the fibonacci tests:
 				System.out.println("Press ENTER to start");
 				System.in.read();
 				callAdvancedFibonacciActor();
-			}else {
+			} else {
 				// wait to stop the slave manually
 				System.out.println("Press ENTER to stop this slave");
 				System.in.read();
 			}
 		} else {
-			System.err.println("Usage:\n"+
-					"\t-simple-tUse the simple testings\n"+
-					"\t-distributed\tUse the distributed tests\n");
+			System.err.println("Usage:\n"
+					+ "\t-simple-tUse the simple testings\n"
+					+ "\t-distributed\tUse the distributed tests\n");
 			System.exit(1);
 		}
 
