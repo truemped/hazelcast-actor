@@ -1,0 +1,10 @@
+.DS_Store
+.classpath
+.project
+.settings/
+target/
+integration-test/.DS_Store
+integration-test/.classpath
+integration-test/.project
+integration-test/.settings/
+integration-test/target/
