@@ -19,12 +19,14 @@ package org.hence22.hazelcast.actor.api;
 import java.io.Serializable;
 
 import com.hazelcast.core.IdGenerator;
-import com.hazelcast.impl.IdGeneratorImpl;
+import com.hazelcast.impl.FactoryImpl;
 
 /**
  * A simple serializable class containing the input message for the
  * {@link Actor}.
  * 
+ * @param <X> The type of the actor's parameter message.
+ *
  * @author truemped@googlemail.com
  */
 public class InputMessage<X extends Serializable> implements Serializable {
@@ -32,7 +34,7 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	/**
 	 * The generator for uids.
 	 */
-	private static final IdGenerator UID_GENERATOR = new IdGeneratorImpl("org.hence22.hazelcast-actor.message-uids");
+	private static final IdGenerator UID_GENERATOR = FactoryImpl.getIdGenerator("org.hence22.hazelcast-actor.message-uids");
 	
 	/**
 	 * The serial version uid.
@@ -64,7 +66,7 @@ public class InputMessage<X extends Serializable> implements Serializable {
 	}
 
 	/**
-	 * @return
+	 * @return The message
 	 */
 	public X getMsg() {
 		return msg;
