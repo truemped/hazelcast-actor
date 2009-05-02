@@ -45,6 +45,9 @@ import com.hazelcast.core.ITopic;
  * 
  *           Now you can start using the actor via the {@link DirectorImpl}.
  * 
+ * @param <X> The type of the actor's parameter message.
+ * @param <Y> The type of the actor"s response message.
+ *
  * @author truemped@googlemail.com
  */
 public abstract class AbstractActor<X extends Serializable, Y extends Serializable>

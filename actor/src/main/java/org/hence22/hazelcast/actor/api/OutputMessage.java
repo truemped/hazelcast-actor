@@ -19,6 +19,10 @@ package org.hence22.hazelcast.actor.api;
 import java.io.Serializable;
 
 /**
+ * A simple wrapper for the actor's response message.
+ * 
+ * @param <Y> The type of the actor"s response message.
+ *
  * @author truemped@googlemail.com
  * 
  */

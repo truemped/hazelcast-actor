@@ -43,6 +43,9 @@ import com.hazelcast.core.ITopic;
  * manager.start();
  * </code>
  * 
+ * @param <X> The type of the actor's parameter message.
+ * @param <Y> The type of the actor"s response message.
+ *
  * @author truemped@googlemail.com
  */
 public class ActorManager<X extends Serializable, Y extends Serializable>
@@ -83,8 +86,8 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	 * {@link ThreadPoolExecutor} with maxNumberOfActorThreads.
 	 * 
 	 * @param strategy
-	 * @param clazz
-	 * @param maxNumberOfActorThreads
+     * @param factory 
+     * @param maxNumberOfActorThreads
 	 */
 	public ActorManager(final QueueNamingStrategy strategy,
 			final ActorWorkerFactory<X, Y> factory,
@@ -102,8 +105,8 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	 * This will allow recursive calls to actors since there may be
 	 * <b>Integer.MAX_VALUE</b> number of threads.
 	 * 
-	 * @param strategy
-	 * @param clazz
+     * @param strategy
+     * @param factory
 	 */
 	public ActorManager(final QueueNamingStrategy strategy,
 			final ActorWorkerFactory<X, Y> factory) {
@@ -118,8 +121,8 @@ public class ActorManager<X extends Serializable, Y extends Serializable>
 	 * 
 	 * @param inputQueueName
 	 * @param outputTopicName
-	 * @param clazz
-	 * @param maxNumberOfActorThreads
+     * @param factory
+     * @param maxNumberOfActorThreads
 	 */
 	public ActorManager(final String inputQueueName,
 			final String outputTopicName,

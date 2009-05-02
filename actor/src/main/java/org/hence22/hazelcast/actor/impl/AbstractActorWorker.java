@@ -30,6 +30,9 @@ import com.hazelcast.core.ITopic;
  * 
  * The actor's input is a field that will be set when a new call receives.
  * 
+ * @param <X> The type of the actor's parameter message.
+ * @param <Y> The type of the actor"s response message.
+ *
  * @author truemped@googlemail.com
  */
 public abstract class AbstractActorWorker<X extends Serializable, Y extends Serializable>

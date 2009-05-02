@@ -25,6 +25,9 @@ import com.hazelcast.core.ITopic;
 /**
  * A factory for {@link AbstractActorWorker}s.
  * 
+ * @param <X> The type of the actor's parameter message.
+ * @param <Y> The type of the actor"s response message.
+ *
  * @author truemped@googlemail.com
  */
 public interface ActorWorkerFactory<X extends Serializable, Y extends Serializable> {

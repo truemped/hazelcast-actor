@@ -47,6 +47,9 @@ import com.hazelcast.core.ITopic;
  * Future&lt:String&gt: echoFuture = echoProxy.call( "Test" );
  * System.out.println( echoFuture.get() );
  * </code>
+ *
+ * @param <X> The type of the actor's parameter message.
+ * @param <Y> The type of the actor"s response message.
  * 
  * @author truemped@googlemail.com
  */
@@ -105,6 +108,7 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 	 * 
 	 * @see org.hence22.hazelcast.actor.api.Director#call(java.io.Serializable)
 	 */
+    @Override
 	public Future<Y> call(final X input) {
 		InputMessage<X> msg = new InputMessage<X>(input);
 		this.inputQueue.offer(msg);
@@ -117,6 +121,7 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 	 * 
 	 * @see org.hence22.hazelcast.actor.api.Director#call(java.util.List)
 	 */
+    @Override
 	public List<Future<Y>> call(final List<X> inputs) {
 		List<Future<Y>> futures = new ArrayList<Future<Y>>();
 		for (X input : inputs) {
@@ -144,7 +149,6 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 	 * The {@link Future} representing a call to an {@link Actor}.
 	 * 
 	 * @author truemped@googlemail.com
-	 * @param <Y>
 	 */
 	public final class ActorFuture implements Future<Y> {
 
@@ -166,17 +170,20 @@ public class DirectorImpl<X extends Serializable, Y extends Serializable>
 		/**
 		 * The result map.
 		 */
-		private ConcurrentHashMap<Long, Y> resultMap;
+		private final ConcurrentHashMap<Long, Y> resultMap;
 
 		/**
 		 * The list of canceled calls.
 		 */
-		private ConcurrentSkipListSet<Long> myCalls;
+		private final ConcurrentSkipListSet<Long> myCalls;
 
-		/**
-		 * @param msgId
-		 */
-		public ActorFuture(final long msgId,
+        /**
+         *
+         * @param msgId
+         * @param resultMap
+         * @param myCalls
+         */
+        public ActorFuture(final long msgId,
 				final ConcurrentHashMap<Long, Y> resultMap,
 				final ConcurrentSkipListSet<Long> myCalls) {
 			this.msgId = msgId;

@@ -25,6 +25,9 @@ import com.hazelcast.core.MessageListener;
 /**
  * Interface for directors.
  * 
+ * @param <X> The type of the actor's parameter message.
+ * @param <Y> The type of the actor"s response message.
+ *
  * @author truemped@googlemail.com
  */
 public interface Director<X extends Serializable, Y extends Serializable>
@@ -32,7 +35,7 @@ public interface Director<X extends Serializable, Y extends Serializable>
 
 	/**
 	 * @param input
-	 * @return
+	 * @return A {@link Future} representing the upcoming result.
 	 */
 	Future<Y> call(final X input);
 
