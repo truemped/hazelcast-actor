@@ -37,7 +37,7 @@ public class DefaultNamingStrategy implements QueueNamingStrategy {
 	private final String resultQueueAppendix;
 
 	/**
-	 * Constructor setting the {@link #namespacePrefix} to the empty string.
+	 * Constructor setting the name space Prefix to the empty string.
 	 */
 	public DefaultNamingStrategy() {
 		this("", ".results");

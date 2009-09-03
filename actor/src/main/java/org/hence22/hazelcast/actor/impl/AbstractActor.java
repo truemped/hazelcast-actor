@@ -186,8 +186,8 @@ public abstract class AbstractActor<X extends Serializable, Y extends Serializab
 	/**
 	 * The inner run method.
 	 * 
-	 * This method simply cycles until {@link #shutdownRequested} is
-	 * <b>true</b>.
+	 * This method simply cycles until {@link #shutdown()} is
+	 * called.
 	 * 
 	 * @see java.lang.Runnable#run()
 	 */

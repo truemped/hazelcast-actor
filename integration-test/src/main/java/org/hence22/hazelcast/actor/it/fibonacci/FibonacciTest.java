@@ -84,7 +84,7 @@ public class FibonacciTest {
 			}
 		} else {
 			System.err.println("Usage:\n"
-					+ "\t-simple-tUse the simple testings\n"
+					+ "\t-simple\tUse the simple testings\n"
 					+ "\t-distributed\tUse the distributed tests\n");
 			System.exit(1);
 		}
@@ -124,7 +124,7 @@ public class FibonacciTest {
 		fibonacci.call(BigInteger.valueOf(3L)).get();
 
 		long now, duration, num;
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 4; i++) {
 			num = new Double(Math.pow(2, i)).longValue();
 			now = new Date().getTime();
 			fibonacci.call(BigInteger.valueOf(num)).get();
@@ -169,7 +169,7 @@ public class FibonacciTest {
 						BigInteger.ZERO, BigInteger.ONE)).get();
 
 		long now, duration, num;
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < 4; i++) {
 			num = new Double(Math.pow(2, i)).longValue();
 			now = new Date().getTime();
 			ADVANCED_FIBONACCI_ACTOR.call(
